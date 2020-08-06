@@ -1,0 +1,39 @@
+version: "3.5"
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - 88:80
+    volumes:
+      - .:/var/www/html
+      - ./docker/config/nginx:/etc/nginx/conf.d
+      - ./docker/logs/nginx:/var/log/nginx
+    links:
+      - php-fpm
+
+  php-fpm:
+    build:
+      context: ./docker/php-fpm
+    volumes:
+      - .:/var/www/html
+    links:
+      - redis
+
+  redis:
+    image: redis
+    restart: always
+    logging:
+      driver: none
+
+  mysql:
+    image: mysql:5.7
+    ports:
+      - 33066:3306
+    command: --init-file /data/application/init.sql
+    volumes:
+      - ./docker/config/mysql/init.sql:/data/application/init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: dev
+      MYSQL_USER: root
